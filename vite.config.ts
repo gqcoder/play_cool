@@ -3,6 +3,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 import path from 'path'
 
 export default defineConfig({
+  base: '/play_cool/', // GitHub Pages 仓库名
   plugins: [
     VitePWA({
       registerType: 'autoUpdate',
