@@ -150,68 +150,91 @@ export class CaveEntrance extends InteractiveObject {
     super(scene, x, y)
 
     const config = INTERACTIVE_OBJECTS.CAVE_ENTRANCE
-    const mountainW = config.SIZE * 2.6
-    const mountainH = config.SIZE * 2.2
-    // 容器原点对齐山体底部（贴地），山体向上堆叠
+    const isMobile = scene.cameras.main.width < 768
+    
+    // 响应式缩放
+    const scale = isMobile ? 0.7 : 1
+    const mountainW = config.SIZE * 2.6 * scale
+    const mountainH = config.SIZE * 2.2 * scale
     const baseY = 0
 
-    // 山体底部阴影（贴地，增强立体感）
+    // 山体底部阴影
     const shadow = scene.add.ellipse(0, baseY + 6, mountainW * 0.85, 18, 0x000000, 0.25)
     this.sprite.add(shadow)
 
-    // === 石头堆砌的山体（多层不规则圆形叠加，深浅灰模拟岩石质感） ===
+    // === 改进的山体：多层岩石，更自然 ===
     const stoneColors = [0x5b6472, 0x4a5361, 0x6b7684, 0x3f4650]
-    const stoneLayers = [
-      // 底层：宽而扎实
-      { dx: -mountainW * 0.32, dy: -6, r: mountainW * 0.24 },
-      { dx: mountainW * 0.30, dy: -8, r: mountainW * 0.22 },
-      { dx: 0, dy: -10, r: mountainW * 0.2 },
-      { dx: -mountainW * 0.15, dy: -mountainH * 0.28, r: mountainW * 0.2 },
-      { dx: mountainW * 0.16, dy: -mountainH * 0.3, r: mountainW * 0.19 },
-      // 中层
-      { dx: -mountainW * 0.08, dy: -mountainH * 0.5, r: mountainW * 0.17 },
-      { dx: mountainW * 0.1, dy: -mountainH * 0.52, r: mountainW * 0.16 },
-      // 顶层：收尖
-      { dx: 0, dy: -mountainH * 0.72, r: mountainW * 0.13 },
+    
+    // 底层大石块（山体基础）
+    const baseLayers = [
+      { dx: -mountainW * 0.35, dy: -8, rx: mountainW * 0.28, ry: mountainW * 0.2 },
+      { dx: mountainW * 0.32, dy: -10, rx: mountainW * 0.26, ry: mountainW * 0.18 },
+      { dx: 0, dy: -12, rx: mountainW * 0.24, ry: mountainW * 0.16 },
     ]
-    stoneLayers.forEach((layer, i) => {
+    baseLayers.forEach((layer, i) => {
       const color = stoneColors[i % stoneColors.length] as number
+      const rock = scene.add.ellipse(layer.dx, baseY + layer.dy, layer.rx * 2, layer.ry * 2, color)
+      rock.setStrokeStyle(2, 0x2a2f38)
+      this.sprite.add(rock)
+    })
+    
+    // 中层石块（山体中段）
+    const midLayers = [
+      { dx: -mountainW * 0.2, dy: -mountainH * 0.35, rx: mountainW * 0.22, ry: mountainW * 0.15 },
+      { dx: mountainW * 0.18, dy: -mountainH * 0.38, rx: mountainW * 0.2, ry: mountainW * 0.14 },
+      { dx: 0, dy: -mountainH * 0.55, rx: mountainW * 0.18, ry: mountainW * 0.12 },
+    ]
+    midLayers.forEach((layer, i) => {
+      const color = stoneColors[(i + 1) % stoneColors.length] as number
+      const rock = scene.add.ellipse(layer.dx, baseY + layer.dy, layer.rx * 2, layer.ry * 2, color)
+      rock.setStrokeStyle(2, 0x2a2f38)
+      this.sprite.add(rock)
+    })
+    
+    // 顶层石块（山顶收尖）
+    const topLayers = [
+      { dx: -mountainW * 0.08, dy: -mountainH * 0.72, r: mountainW * 0.14 },
+      { dx: mountainW * 0.06, dy: -mountainH * 0.75, r: mountainW * 0.12 },
+      { dx: 0, dy: -mountainH * 0.88, r: mountainW * 0.1 },
+    ]
+    topLayers.forEach((layer, i) => {
+      const color = stoneColors[(i + 2) % stoneColors.length] as number
       const rock = scene.add.circle(layer.dx, baseY + layer.dy, layer.r, color)
       rock.setStrokeStyle(2, 0x2a2f38)
       this.sprite.add(rock)
     })
 
-    // 岩石高光点缀（增加质感层次）
-    for (let i = 0; i < 10; i++) {
+    // 岩石高光（增加质感）
+    for (let i = 0; i < 8; i++) {
       const hx = Phaser.Math.Between(-mountainW * 0.35, mountainW * 0.35)
       const hy = baseY - Phaser.Math.Between(10, mountainH * 0.85)
-      const hr = Phaser.Math.Between(3, 7)
+      const hr = Phaser.Math.Between(3, 6) * scale
       const highlight = scene.add.circle(hx, hy, hr, 0x8b95a3, 0.5)
       this.sprite.add(highlight)
     }
 
-    // === 洞门（山体正面的黑色拱形入口） ===
-    const doorW = config.SIZE * 0.75
-    const doorH = config.SIZE * 0.85
-    const doorY = baseY - doorH / 2
+    // === 洞门（山体正面中下部） ===
+    const doorW = config.SIZE * 0.75 * scale
+    const doorH = config.SIZE * 0.85 * scale
+    const doorY = baseY - doorH / 2 - 8
 
-    // 洞门外圈（深棕色石框，模拟人工加固的洞口边缘）
+    // 洞门外框（石制门框）
     const doorFrame = scene.add.ellipse(0, doorY, doorW + 10, doorH + 8, 0x3a2e22)
     doorFrame.setStrokeStyle(3, 0x241b12)
     this.sprite.add(doorFrame)
 
-    // 洞门主体（纯黑，模拟深不见底的洞口）
+    // 洞门主体（深黑）
     const door = scene.add.ellipse(0, doorY, doorW, doorH, 0x0a0a12)
     this.sprite.add(door)
 
-    // 洞口内侧微光（提示可进入，避免纯黑过于突兀）
+    // 洞口微光
     const innerGlow = scene.add.ellipse(0, doorY + doorH * 0.15, doorW * 0.5, doorH * 0.35, 0x2a2440, 0.6)
     this.sprite.add(innerGlow)
 
     // 提示文字位置（山顶上方）
     this.hintOffsetY = -mountainH - 16
 
-    // 开启点击交互（覆盖整座山体范围）
+    // 开启点击交互
     this.enableClickInteraction(mountainW, mountainH)
   }
 }

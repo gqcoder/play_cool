@@ -42,6 +42,9 @@ export class WorldMapScene extends Phaser.Scene {
     // === 创建物理碰撞组（用于树木和石头） ===
     this.obstacleGroup = this.physics.add.staticGroup()
 
+    // 响应式判断（提前声明，供后续复用）
+    const isMobile = width < 768
+
     // === 装饰：树木（边缘分布，两种造型交替，带碰撞体积） ===
     const treePositions = [
       { x: 80, y: 100, type: 'tree_round' },
@@ -55,16 +58,16 @@ export class WorldMapScene extends Phaser.Scene {
     ]
     treePositions.forEach(pos => {
       const tree = this.add.image(pos.x, pos.y, `puny_${pos.type}`)
-      tree.setOrigin(0.5, 0.9) // 锚点在树干底部
-      tree.setDepth(pos.y) // 根据 Y 坐标设置深度（伪3D）
-      tree.setScale(1.8) // 放大到比人物（1.3倍）更大
+      tree.setOrigin(0.5, 0.9) // 稍微偏上，避免底部像素和碰撞体错位
+      tree.setDepth(pos.y + 100) // 深度加偏移，确保在其他装饰物之上
+      tree.setScale(isMobile ? 1.0 : 1.5) // 移动端缩小避免遮挡过多
       
       // 添加物理碰撞体（树干底部区域，阻挡玩家穿过）
       const collider = this.obstacleGroup.create(pos.x, pos.y) as Phaser.Physics.Arcade.Sprite
       collider.setVisible(false) // 碰撞体不可见，只用于阻挡
+      collider.setOrigin(0.5, 1) // 碰撞体锚点在底部
       if (collider.body) {
-        collider.body.setSize(20, 16, false) // 树干底部碰撞范围，不居中
-        collider.body.setOffset(-10, -8) // 手动中心对齐
+        collider.body.setSize(isMobile ? 16 : 20, isMobile ? 12 : 16) // 移动端碰撞体也缩小
       }
     })
 
@@ -84,14 +87,17 @@ export class WorldMapScene extends Phaser.Scene {
       const y = Phaser.Math.Between(50, height - 50)
       if (Math.abs(y - pathY) > 60) {
         const key = Phaser.Utils.Array.GetRandom(rockVariants)
-        this.add.image(x, y, key).setDepth(y).setOrigin(0.5, 0.8).setScale(2) // 放大到比人物更大
+        const rock = this.add.image(x, y, key)
+        rock.setDepth(y - 10) // 石头深度略低于树，避免遮挡
+        rock.setOrigin(0.5, 0.85) // 锚点稍微偏上
+        rock.setScale(isMobile ? 0.8 : 1.2) // 移动端缩小
 
         // 添加物理碰撞体（阻挡玩家穿过）
         const collider = this.obstacleGroup.create(x, y) as Phaser.Physics.Arcade.Sprite
         collider.setVisible(false)
+        collider.setOrigin(0.5, 1)
         if (collider.body) {
-          collider.body.setSize(18, 14, false)
-          collider.body.setOffset(-9, -10)
+          collider.body.setSize(isMobile ? 14 : 18, isMobile ? 10 : 14)
         }
       }
     }
@@ -103,7 +109,10 @@ export class WorldMapScene extends Phaser.Scene {
       const y = Phaser.Math.Between(40, height - 40)
       if (Math.abs(y - pathY) > 45) {
         const key = Phaser.Utils.Array.GetRandom(mushroomVariants)
-        this.add.image(x, y, key).setDepth(y).setOrigin(0.5, 0.9).setScale(1.2)
+        this.add.image(x, y, key)
+          .setDepth(y - 5)
+          .setOrigin(0.5, 0.9)
+          .setScale(isMobile ? 0.8 : 1.0)
       }
     }
 
@@ -112,7 +121,10 @@ export class WorldMapScene extends Phaser.Scene {
       const x = Phaser.Math.Between(40, width - 40)
       const y = Phaser.Math.Between(40, height - 40)
       if (Math.abs(y - pathY) > 45) {
-        this.add.image(x, y, 'bush').setDepth(y).setOrigin(0.5, 0.8)
+        this.add.image(x, y, 'bush')
+          .setDepth(y - 3)
+          .setOrigin(0.5, 0.8)
+          .setScale(isMobile ? 0.7 : 1.0)
       }
     }
 
@@ -127,18 +139,24 @@ export class WorldMapScene extends Phaser.Scene {
     this.signboard.setOnInteract(() => this.showSignboardDialog())
 
     // 创建山洞入口（右上方）
-    this.caveEntrance = new CaveEntrance(this, width - 150, 150)
+    const caveX = isMobile ? width - 100 : width - 150
+    const caveY = isMobile ? 120 : 150
+    this.caveEntrance = new CaveEntrance(this, caveX, caveY)
     this.caveEntrance.setOnInteract(() => this.enterCave())
     
     // 山洞入口也需要碰撞体积（阻挡玩家穿过山体，但可以从前方进入）
+    const caveScale = isMobile ? 0.6 : 0.8
     const caveMountainCollider = this.obstacleGroup.create(
       this.caveEntrance.sprite.x, 
-      this.caveEntrance.sprite.y - 70 // 山体主体位置（偏上）
+      this.caveEntrance.sprite.y - 30 * caveScale
     ) as Phaser.Physics.Arcade.Sprite
     caveMountainCollider.setVisible(false)
+    caveMountainCollider.setOrigin(0.5, 0.5)
     if (caveMountainCollider.body) {
-      caveMountainCollider.body.setSize(140, 120, false) // 覆盖山体主体区域
-      caveMountainCollider.body.setOffset(-70, -60)
+      caveMountainCollider.body.setSize(
+        isMobile ? 60 : 80,
+        isMobile ? 40 : 60
+      )
     }
 
     // 设置点击移动控制
@@ -184,6 +202,7 @@ export class WorldMapScene extends Phaser.Scene {
     const { width, height } = this.cameras.main
 
     this.dialogBox = this.add.container(width / 2, height - 120)
+    this.dialogBox.setDepth(10000) // 确保对话框在最顶层
 
     // 对话框背景
     const bg = this.add.rectangle(0, 0, 600, 150, 0x1e2636, 0.95)

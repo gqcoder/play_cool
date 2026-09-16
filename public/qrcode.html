@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play Cool - 扫码进入游戏</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a0d12 0%, #1e2636 100%);
+      color: #e0e0e0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: grid;
+      place-items: center;
+      padding: clamp(1rem, 3vw, 2rem);
+    }
+    
+    .container {
+      max-width: 480px;
+      width: 100%;
+      background: #0f131c;
+      border-radius: 24px;
+      padding: clamp(2rem, 5vw, 3rem);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      text-align: center;
+    }
+    
+    h1 {
+      font-size: clamp(1.75rem, 5vw, 2.5rem);
+      color: #38bdf8;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+    
+    .subtitle {
+      font-size: clamp(0.875rem, 2.5vw, 1rem);
+      color: #94a3b8;
+      margin-bottom: 2rem;
+    }
+    
+    .qr-wrapper {
+      background: white;
+      padding: clamp(1rem, 3vw, 1.5rem);
+      border-radius: 16px;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+    
+    #qrcode {
+      width: 100%;
+      max-width: 280px;
+      height: auto;
+    }
+    
+    .url-box {
+      background: #161d2b;
+      border: 2px solid #38bdf8;
+      border-radius: 999px;
+      padding: 0.75rem 1.5rem;
+      margin-bottom: 1rem;
+      word-break: break-all;
+      font-size: clamp(0.75rem, 2vw, 0.875rem);
+      color: #38bdf8;
+    }
+    
+    .hint {
+      font-size: clamp(0.75rem, 2vw, 0.875rem);
+      color: #64748b;
+      line-height: 1.6;
+    }
+    
+    .features {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 2rem;
+      text-align: left;
+    }
+    
+    .feature {
+      background: #161d2b;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: clamp(0.8rem, 2.2vw, 0.9rem);
+    }
+    
+    .feature::before {
+      content: '✓';
+      color: #6ee7b7;
+      margin-right: 0.5rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Play Cool</h1>
+    <p class="subtitle">像素冒险 H5 游戏</p>
+    
+    <div class="qr-wrapper">
+      <canvas id="qrcode"></canvas>
+    </div>
+    
+    <div class="url-box" id="gameUrl"></div>
+    
+    <p class="hint">使用手机扫描二维码或直接访问链接进入游戏</p>
+    
+    <div class="features">
+      <div class="feature">支持移动端触控操作</div>
+      <div class="feature">PWA 应用，可添加到主屏幕</div>
+      <div class="feature">离线游戏，无需网络</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <script>
+    // 游戏 URL（部署后替换为实际地址）
+    const gameUrl = window.location.origin + '/play_cool/';
+    
+    // 显示 URL
+    document.getElementById('gameUrl').textContent = gameUrl;
+    
+    // 生成二维码
+    const canvas = document.getElementById('qrcode');
+    QRCode.toCanvas(canvas, gameUrl, {
+      width: 280,
+      margin: 2,
+      color: {
+        dark: '#0a0d12',
+        light: '#ffffff'
+      }
+    }, function (error) {
+      if (error) console.error(error);
+    });
+  </script>
+</body>
+</html>
