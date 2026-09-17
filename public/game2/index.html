@@ -1,0 +1,676 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#100b2f" />
+  <meta name="description" content="和像素宇航员一起收集星光、穿越虫洞，为生日蛋糕点亮蜡烛。" />
+  <title>星愿宇航员 · 生日大冒险</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23100b2f'/%3E%3Cpath d='M16 3l2.6 7.4L26 13l-7.4 2.6L16 23l-2.6-7.4L6 13l7.4-2.6z' fill='%2368e7ff'/%3E%3Ccircle cx='24' cy='24' r='3' fill='%23ffd15c'/%3E%3C/svg%3E" />
+  <style>
+    @font-face {
+      font-family: "FusionPixel";
+      src: url("./font/fusion-pixel-12px.woff2") format("woff2");
+      font-style: normal;
+      font-weight: 400 900;
+      font-display: swap;
+    }
+    :root {
+      --ink: #f7f2da;
+      --muted: #b9c9ed;
+      --cyan: #63e6ff;
+      --violet: #8f6cff;
+      --gold: #ffd264;
+      --coral: #ff8a70;
+      --night: #09051d;
+      --panel: rgba(21, 18, 61, .92);
+      --pixel-shadow: 0 3px 0 #211b49, 3px 0 0 #211b49, -3px 0 0 #211b49, 0 -3px 0 #211b49;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; min-height: 100%; background: var(--night); color: var(--ink); }
+    body {
+      min-height: 100svh;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      font-family: "FusionPixel", ui-monospace, monospace;
+      font-synthesis: none;
+      font-kerning: none;
+      -webkit-font-smoothing: none;
+      text-rendering: geometricPrecision;
+      background:
+        radial-gradient(circle at 78% 18%, rgba(88, 79, 200, .2), transparent 28%),
+        radial-gradient(circle at 12% 86%, rgba(55, 197, 220, .14), transparent 30%),
+        #09051d;
+    }
+    button, input { font: inherit; letter-spacing: .06em; }
+    button { color: inherit; }
+    .shell {
+      width: min(1180px, 100vw);
+      min-height: 100svh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      padding: clamp(10px, 2vw, 22px);
+      gap: 12px;
+    }
+    .topbar, .footerbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-width: 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: .08em;
+      text-shadow: 2px 2px 0 #332a71;
+      white-space: nowrap;
+    }
+    .brand-star { color: var(--gold); font-size: 1.4rem; animation: twinkle 1.4s steps(2) infinite; }
+    .hud {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--muted);
+      font-weight: 800;
+      font-size: .86rem;
+    }
+    .hud-chip {
+      padding: 7px 10px;
+      border: 2px solid #4b4a93;
+      background: #181541;
+      box-shadow: 3px 3px 0 #050313;
+    }
+    .hud b { color: var(--ink); }
+    .game-frame {
+      position: relative;
+      width: 100%;
+      min-height: 0;
+      border: 4px solid #645bc1;
+      outline: 4px solid #18133d;
+      background: #08051e;
+      box-shadow: 0 16px 0 rgba(0,0,0,.26), inset 0 0 0 3px #272056;
+      overflow: hidden;
+      image-rendering: pixelated;
+    }
+    canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; touch-action: none; }
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: rgba(5, 3, 24, .4);
+      backdrop-filter: blur(2px);
+      z-index: 4;
+    }
+    .overlay[hidden] { display: none; }
+    .card {
+      width: min(560px, 100%);
+      text-align: center;
+      padding: clamp(22px, 5vw, 42px);
+      border: 4px solid #7068cf;
+      outline: 4px solid #18133d;
+      background: var(--panel);
+      box-shadow: 10px 10px 0 rgba(0,0,0,.38), inset 0 0 0 2px #292560;
+    }
+    .eyebrow { color: var(--cyan); letter-spacing: .2em; font-weight: 900; font-size: .82rem; }
+    h1, h2, p { margin-top: 0; }
+    h1 {
+      margin: 10px 0 16px;
+      font-size: clamp(2rem, 6vw, 4rem);
+      line-height: 1.05;
+      letter-spacing: .04em;
+      color: #fff7cf;
+      text-shadow: 4px 4px 0 #5a3a9d, 8px 8px 0 #151031;
+    }
+    h2 { font-size: clamp(1.7rem, 5vw, 3rem); color: #fff4bd; text-shadow: 3px 3px 0 #54328d; }
+    .copy { line-height: 1.8; color: #d8e5ff; font-size: clamp(.94rem, 2vw, 1.06rem); }
+    .name-row { display: grid; gap: 8px; margin: 20px auto; max-width: 330px; text-align: left; color: var(--muted); font-size: .86rem; }
+    .name-row input {
+      width: 100%;
+      border: 3px solid #4c4a94;
+      outline: 0;
+      padding: 12px 14px;
+      color: #fff;
+      background: #0d0a2a;
+      box-shadow: inset 3px 3px 0 #07051a;
+      border-radius: 0;
+    }
+    .name-row input:focus { border-color: var(--cyan); }
+    .pixel-btn {
+      border: 0;
+      padding: 13px 22px;
+      min-width: 180px;
+      background: var(--cyan);
+      color: #102147;
+      font-weight: 950;
+      letter-spacing: .08em;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #2080a8, 5px 0 0 #162052, -5px 0 0 #162052, 0 -5px 0 #162052;
+      transition: transform .08s linear, filter .08s linear;
+    }
+    .pixel-btn:hover { filter: brightness(1.12); transform: translateY(-2px); }
+    .pixel-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 #2080a8, 5px 0 0 #162052, -5px 0 0 #162052, 0 -5px 0 #162052; }
+    .controls-help { color: #aab8dd; font-size: .78rem; letter-spacing: .04em; text-align: right; }
+    .status-line { color: #dbe4ff; font-size: .84rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mobile-controls {
+      position: absolute;
+      inset: auto 12px 12px 12px;
+      display: none;
+      justify-content: space-between;
+      align-items: end;
+      z-index: 3;
+      pointer-events: none;
+    }
+    .dpad { display: grid; grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(3, 48px); gap: 4px; }
+    .touch-btn {
+      pointer-events: auto;
+      border: 2px solid rgba(180, 235, 255, .55);
+      background: rgba(24, 21, 65, .76);
+      color: white;
+      width: 48px;
+      height: 48px;
+      font-size: 1.2rem;
+      font-weight: 900;
+      box-shadow: 3px 3px 0 rgba(0,0,0,.35);
+      touch-action: none;
+    }
+    .touch-btn[data-key="up"] { grid-column: 2; grid-row: 1; }
+    .touch-btn[data-key="left"] { grid-column: 1; grid-row: 2; }
+    .touch-btn[data-key="down"] { grid-column: 2; grid-row: 2; }
+    .touch-btn[data-key="right"] { grid-column: 3; grid-row: 2; }
+    .action-pad { display: flex; align-items: end; gap: 10px; }
+    .boost { width: 58px; height: 58px; border-color: rgba(255, 214, 106, .7); color: var(--gold); }
+    .fire { width: 70px; height: 70px; border-color: rgba(99, 230, 255, .8); color: var(--cyan); font-size: .84rem; }
+    .celebrate .card { animation: pop .45s steps(5) both; }
+    .gift-message { color: #fff; font-size: clamp(1rem, 2.2vw, 1.2rem); line-height: 1.8; margin-bottom: 24px; }
+    .small-note { color: #93a7d6; font-size: .75rem; margin: 14px 0 0; }
+    @keyframes twinkle { 50% { opacity: .45; transform: scale(.8); } }
+    @keyframes pop { from { transform: scale(.65); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @media (pointer: coarse), (max-width: 760px) {
+      .mobile-controls { display: flex; }
+      .controls-help { display: none; }
+      .shell { padding: 8px; gap: 8px; }
+      .brand { font-size: .85rem; }
+      .hud-chip { padding: 5px 7px; }
+      .card { padding: 22px 18px; }
+    }
+    @media (max-width: 420px) {
+      .dpad { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); }
+      .touch-btn { width: 42px; height: 42px; }
+      .action-pad { gap: 6px; }
+      .boost { width: 48px; height: 48px; }
+      .fire { width: 58px; height: 58px; font-size: .72rem; }
+      .hud { gap: 4px; font-size: .72rem; }
+    }
+    @media (max-height: 650px) {
+      .topbar, .footerbar { display: none; }
+      .shell { grid-template-rows: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <div class="brand"><span class="brand-star">✦</span><span>星愿宇航员</span></div>
+      <div class="hud" aria-live="polite">
+        <span class="hud-chip">星光 <b id="starCount">0 / 6</b></span>
+        <span class="hud-chip">击碎 <b id="destroyed">0</b></span>
+        <span class="hud-chip">能量 <b id="hearts">♥ ♥ ♥</b></span>
+      </div>
+    </header>
+
+    <section class="game-frame" aria-label="星愿宇航员游戏区域">
+      <canvas id="game" width="960" height="600"></canvas>
+
+      <div class="overlay" id="startOverlay">
+        <div class="card">
+          <div class="eyebrow">BIRTHDAY MISSION</div>
+          <h1>星愿宇航员</h1>
+          <p class="copy">收集散落在宇宙中的 6 枚星光。面对迎面飞来的陨石，你可以灵活躲避，也可以开枪把它们击碎。虫洞的另一边，正等待着一份生日惊喜。</p>
+          <label class="name-row">寿星昵称（可选）
+            <input id="nameInput" maxlength="12" placeholder="输入名字，或留空开始" autocomplete="off" />
+          </label>
+          <button class="pixel-btn" id="startBtn">开始任务</button>
+          <p class="small-note">方向键 / WASD 移动 · 空格 / J 发射 · Shift 加速</p>
+        </div>
+      </div>
+
+      <div class="overlay" id="failOverlay" hidden>
+        <div class="card">
+          <div class="eyebrow">MISSION PAUSED</div>
+          <h2>能量耗尽啦</h2>
+          <p class="copy">别担心，星星还在原地等你。调整一下航线，再试一次吧！</p>
+          <button class="pixel-btn" id="retryBtn">重新出发</button>
+        </div>
+      </div>
+
+      <div class="overlay celebrate" id="winOverlay" hidden>
+        <div class="card">
+          <div class="eyebrow">WISH COMPLETE!</div>
+          <h2 id="birthdayTitle">生日快乐！</h2>
+          <p class="gift-message" id="birthdayMessage">愿你的新一岁像星河一样闪耀，永远有勇气奔向喜欢的宇宙，也总有人为你点亮归航的灯。</p>
+          <button class="pixel-btn" id="replayBtn">再飞一次</button>
+          <p class="small-note">蜡烛已经点亮 · 记得许个愿 ✦</p>
+        </div>
+      </div>
+
+      <div class="mobile-controls" aria-label="触控方向键">
+        <div class="dpad">
+          <button class="touch-btn" data-key="up" aria-label="向上">▲</button>
+          <button class="touch-btn" data-key="left" aria-label="向左">◀</button>
+          <button class="touch-btn" data-key="down" aria-label="向下">▼</button>
+          <button class="touch-btn" data-key="right" aria-label="向右">▶</button>
+        </div>
+        <div class="action-pad">
+          <button class="touch-btn boost" data-key="boost" aria-label="加速">✦</button>
+          <button class="touch-btn fire" data-key="fire" aria-label="发射">发射</button>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footerbar">
+      <div class="status-line" id="status">任务：收集星光碎片，唤醒虫洞</div>
+      <div class="controls-help">移动 WASD / 方向键　·　发射 SPACE / J　·　加速 SHIFT</div>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      'use strict';
+      const canvas = document.getElementById('game');
+      const ctx = canvas.getContext('2d');
+      const frame = document.querySelector('.game-frame');
+      const starCount = document.getElementById('starCount');
+      const hearts = document.getElementById('hearts');
+      const status = document.getElementById('status');
+      const overlays = {
+        start: document.getElementById('startOverlay'),
+        fail: document.getElementById('failOverlay'),
+        win: document.getElementById('winOverlay')
+      };
+      const atlas = new Image();
+      atlas.src = './assets/cosmic-atlas.png';
+      const happySprite = new Image();
+      happySprite.src = './assets/happy-astronaut.png';
+      const keys = Object.create(null);
+      const W = 960, H = 600;
+      let last = 0, state = 'start', collected = 0, energy = 3, invuln = 0;
+      let t = 0, portalPulse = 0, transition = 0, candleLit = false, audioCtx;
+      let happyTimer = 0, shootCooldown = 0, destroyed = 0;
+      let playerName = '';
+      const player = { x: 120, y: 300, vx: 0, vy: 0, r: 25, trail: [], facing: 1 };
+      let shards = [], meteors = [], bullets = [], bursts = [], confetti = [];
+      const bgStars = Array.from({ length: 118 }, (_, i) => ({
+        x: (i * 83 + 17) % W,
+        y: (i * 137 + 31) % H,
+        s: 1 + (i % 3),
+        p: (i * .37) % 6.28
+      }));
+
+      function resize() {
+        const shellH = document.querySelector('.shell').clientHeight;
+        const bars = window.innerHeight > 650 ? 108 : 16;
+        const maxH = Math.max(360, shellH - bars);
+        const ratio = W / H;
+        let width = frame.parentElement.clientWidth;
+        let height = width / ratio;
+        if (height > maxH) { height = maxH; width = height * ratio; }
+        frame.style.width = width + 'px';
+        frame.style.height = height + 'px';
+        frame.style.margin = 'auto';
+      }
+      addEventListener('resize', resize);
+
+      function makeLevel() {
+        shards = [
+          { x: 205, y: 105 }, { x: 420, y: 188 }, { x: 705, y: 95 },
+          { x: 820, y: 420 }, { x: 545, y: 505 }, { x: 250, y: 450 }
+        ].map((p, i) => ({ ...p, got: false, phase: i }));
+        meteors = [
+          { x: 690, y: 132, r: 24, vx: -132, phase: .3, hp: 1 },
+          { x: 940, y: 310, r: 35, vx: -116, phase: 1.4, hp: 2 },
+          { x: 1160, y: 478, r: 28, vx: -148, phase: 2.2, hp: 1 },
+          { x: 1370, y: 218, r: 22, vx: -166, phase: 3.1, hp: 1 },
+          { x: 1550, y: 390, r: 40, vx: -104, phase: 4.4, hp: 2 },
+          { x: 1730, y: 84, r: 25, vx: -154, phase: 5.2, hp: 1 }
+        ];
+        Object.assign(player, { x: 95, y: 300, vx: 0, vy: 0, trail: [], facing: 1 });
+        collected = 0; destroyed = 0; energy = 3; invuln = 0; happyTimer = 0; shootCooldown = 0;
+        transition = 0; candleLit = false; bullets = []; bursts = []; confetti = [];
+        updateHud();
+      }
+
+      function updateHud() {
+        starCount.textContent = collected + ' / 6';
+        hearts.textContent = Array.from({length: 3}, (_, i) => i < energy ? '♥' : '·').join(' ');
+        document.getElementById('destroyed').textContent = destroyed;
+      }
+
+      function startGame() {
+        playerName = document.getElementById('nameInput').value.trim();
+        makeLevel(); state = 'collect';
+        overlays.start.hidden = true; overlays.fail.hidden = true; overlays.win.hidden = true;
+        status.textContent = '任务：收集星光碎片，唤醒虫洞';
+        ensureAudio();
+      }
+
+      function ensureAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      }
+
+      function blip(freq = 660, dur = .08, type = 'square', gain = .035) {
+        if (!audioCtx) return;
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.setValueAtTime(gain, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + dur);
+        o.connect(g).connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
+      }
+
+      function birthdayTune() {
+        ensureAudio();
+        const notes = [392,392,440,392,523,494,392,392,440,392,587,523,392,392,784,659,523,494,440,698,698,659,523,587,523];
+        const lens = [.22,.12,.34,.34,.34,.65,.22,.12,.34,.34,.34,.65,.22,.12,.34,.34,.34,.34,.65,.22,.12,.34,.34,.34,.75];
+        let when = audioCtx.currentTime + .08;
+        notes.forEach((n, i) => {
+          const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+          o.type = 'square'; o.frequency.value = n;
+          g.gain.setValueAtTime(.0001, when);
+          g.gain.linearRampToValueAtTime(.035, when + .02);
+          g.gain.exponentialRampToValueAtTime(.001, when + lens[i] * .85);
+          o.connect(g).connect(audioCtx.destination); o.start(when); o.stop(when + lens[i]);
+          when += lens[i];
+        });
+      }
+
+      function resetToStart() {
+        makeLevel(); state = 'start'; overlays.start.hidden = false; overlays.fail.hidden = true; overlays.win.hidden = true;
+        status.textContent = '任务：收集星光碎片，唤醒虫洞';
+      }
+
+      function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+      function respawnMeteor(m, extra = 0) {
+        m.x = W + 120 + extra + Math.random() * 520;
+        m.y = 70 + Math.random() * (H - 140);
+        m.r = 20 + Math.random() * 22;
+        m.vx = -(105 + Math.random() * 72);
+        m.phase = Math.random() * Math.PI * 2;
+        m.hp = m.r > 32 ? 2 : 1;
+        m.hit = 0;
+      }
+
+      function fireShot() {
+        if (state !== 'collect' || shootCooldown > 0) return;
+        shootCooldown = .16;
+        bullets.push({ x: player.x + player.facing * 30, y: player.y - 2, vx: player.facing * 600, life: 1.4, dead: false });
+        blip(980, .055, 'square', .022);
+      }
+
+      function burstMeteor(m) {
+        for (let i = 0; i < 16; i++) {
+          const a = i / 16 * Math.PI * 2;
+          bursts.push({ x: m.x, y: m.y, vx: Math.cos(a) * (70 + i * 4), vy: Math.sin(a) * (70 + i * 4), life: .42, color: i % 3 ? '#7b6d98' : '#63e6ff' });
+        }
+      }
+
+      function update(dt) {
+        t += dt; portalPulse += dt;
+        happyTimer = Math.max(0, happyTimer - dt);
+        shootCooldown = Math.max(0, shootCooldown - dt);
+        if (!['collect','portal','cake'].includes(state)) return;
+        const accel = (keys.Shift || keys.boost ? 780 : 540);
+        let ax = 0, ay = 0;
+        if (keys.ArrowLeft || keys.a) ax -= 1;
+        if (keys.ArrowRight || keys.d) ax += 1;
+        if (keys.ArrowUp || keys.w) ay -= 1;
+        if (keys.ArrowDown || keys.s) ay += 1;
+        if (ax) player.facing = Math.sign(ax);
+        const mag = Math.hypot(ax, ay) || 1;
+        player.vx += (ax / mag) * accel * dt;
+        player.vy += (ay / mag) * accel * dt;
+        const drag = Math.pow(.0014, dt);
+        player.vx *= drag; player.vy *= drag;
+        const max = keys.Shift || keys.boost ? 470 : 330;
+        const speed = Math.hypot(player.vx, player.vy);
+        if (speed > max) { player.vx *= max / speed; player.vy *= max / speed; }
+        player.x = Math.max(34, Math.min(W - 34, player.x + player.vx * dt));
+        player.y = Math.max(38, Math.min(H - 38, player.y + player.vy * dt));
+        if (speed > 35) {
+          player.trail.push({ x: player.x - Math.sign(player.vx || 1) * 23, y: player.y + 8, life: .34 });
+          if (player.trail.length > 16) player.trail.shift();
+        }
+        player.trail.forEach(p => p.life -= dt); player.trail = player.trail.filter(p => p.life > 0);
+
+        if (state === 'collect') {
+          if (keys[' '] || keys.j || keys.fire) fireShot();
+          bullets.forEach(b => { b.x += b.vx * dt; b.life -= dt; });
+          bullets = bullets.filter(b => !b.dead && b.life > 0 && b.x > -40 && b.x < W + 40);
+          shards.forEach(s => {
+            if (!s.got && dist(player, s) < 38) {
+              s.got = true; collected++; happyTimer = 1.15; updateHud(); blip(720 + collected * 60, .12, 'square', .045);
+              status.textContent = '星光 +1！宇航员开心地挥了挥手';
+              if (collected === shards.length) {
+                state = 'portal'; status.textContent = '虫洞已出现！飞向右侧的旋涡';
+                blip(1040, .5, 'sine', .055);
+              }
+            }
+          });
+          meteors.forEach(m => {
+            m.x += m.vx * dt;
+            m.y += Math.sin(t * 1.8 + m.phase) * 18 * dt;
+            m.hit = Math.max(0, (m.hit || 0) - dt);
+            if (m.x < -70) respawnMeteor(m, 180);
+            bullets.forEach(b => {
+              if (!b.dead && Math.hypot(b.x - m.x, b.y - m.y) < m.r + 8) {
+                b.dead = true; m.hp--; m.hit = .12; blip(240, .06, 'square', .03);
+                if (m.hp <= 0) {
+                  destroyed++; burstMeteor(m); respawnMeteor(m, 260); updateHud(); blip(150, .16, 'sawtooth', .04);
+                }
+              }
+            });
+            if (invuln <= 0 && Math.hypot(player.x - m.x, player.y - m.y) < player.r + m.r * .72) {
+              energy--; invuln = 1.25; player.vx *= -1.8; player.vy *= -1.8; updateHud(); blip(110, .22, 'sawtooth', .055);
+              respawnMeteor(m, 220);
+              if (energy <= 0) { state = 'fail'; overlays.fail.hidden = false; status.textContent = '任务暂停：能量耗尽'; }
+            }
+          });
+        }
+        bursts.forEach(p => { p.x += p.vx * dt; p.y += p.vy * dt; p.vx *= .96; p.vy *= .96; p.life -= dt; });
+        bursts = bursts.filter(p => p.life > 0);
+        invuln = Math.max(0, invuln - dt);
+
+        if (state === 'portal' && Math.hypot(player.x - 805, player.y - 300) < 105) {
+          state = 'warp'; transition = 0; status.textContent = '正在穿越虫洞…'; blip(1460, .7, 'sine', .05);
+        }
+        if (state === 'cake') {
+          const candle = { x: W / 2, y: 150 };
+          if (!candleLit && Math.hypot(player.x - candle.x, player.y - candle.y) < 54) win();
+        }
+        confetti.forEach(c => { c.x += c.vx * dt; c.y += c.vy * dt; c.vy += 120 * dt; c.rot += c.vr * dt; });
+      }
+
+      function win() {
+        candleLit = true; state = 'win';
+        for (let i = 0; i < 90; i++) confetti.push({ x: W/2, y: 130, vx: (Math.random()-.5)*520, vy: -Math.random()*390, rot: 0, vr: (Math.random()-.5)*12, color: ['#63e6ff','#ffd264','#ff8a70','#9a72ff','#fff5d5'][i%5] });
+        const title = playerName ? playerName + '，生日快乐！' : '生日快乐！';
+        document.getElementById('birthdayTitle').textContent = title;
+        birthdayTune();
+        setTimeout(() => { overlays.win.hidden = false; status.textContent = '星愿达成：蜡烛已点亮 ✦'; }, 1000);
+      }
+
+      function drawBg(mode) {
+        const g = ctx.createLinearGradient(0, 0, 0, H);
+        if (mode === 'cake') { g.addColorStop(0, '#140b38'); g.addColorStop(1, '#241149'); }
+        else { g.addColorStop(0, '#07031b'); g.addColorStop(1, '#12103b'); }
+        ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+        ctx.fillStyle = mode === 'cake' ? 'rgba(137,94,255,.12)' : 'rgba(62,214,255,.07)';
+        ctx.fillRect(0, Math.floor(H*.64), W, H*.36);
+        bgStars.forEach((s, i) => {
+          const glow = .38 + .62 * Math.abs(Math.sin(t * (1 + (i%3)*.2) + s.p));
+          ctx.fillStyle = i%11===0 ? `rgba(255,211,100,${glow})` : `rgba(205,230,255,${glow})`;
+          ctx.fillRect(Math.floor(s.x), Math.floor((s.y + t*(i%3+1)*2)%H), s.s, s.s);
+          if (s.s === 3) { ctx.fillRect(s.x-2, s.y+1, 7, 1); ctx.fillRect(s.x+1, s.y-2, 1, 7); }
+        });
+      }
+
+      function drawAstronaut() {
+        ctx.save();
+        ctx.globalAlpha = invuln > 0 && Math.floor(invuln * 12) % 2 ? .35 : 1;
+        player.trail.forEach((p, i) => {
+          ctx.globalAlpha = Math.max(0, p.life * 1.8);
+          ctx.fillStyle = i%2 ? '#65eaff' : '#7f73ff';
+          const s = 3 + i%4; ctx.fillRect(Math.round(p.x), Math.round(p.y), s, s);
+        });
+        ctx.globalAlpha = 1;
+        if (happyTimer > 0 && happySprite.complete && happySprite.naturalWidth) {
+          const flip = player.facing < 0;
+          ctx.translate(player.x, player.y);
+          if (flip) ctx.scale(-1, 1);
+          ctx.drawImage(happySprite, 245, 205, 770, 850, -51, -56, 102, 112);
+        } else if (atlas.complete && atlas.naturalWidth) {
+          const aw = atlas.naturalWidth / 2, ah = atlas.naturalHeight / 2;
+          const flip = player.vx < -4;
+          ctx.translate(player.x, player.y);
+          if (flip) ctx.scale(-1,1);
+          ctx.drawImage(atlas, 0, 0, aw, ah, -48, -48, 96, 96);
+        } else {
+          ctx.translate(player.x, player.y);
+          ctx.fillStyle = '#f7f0d8'; ctx.fillRect(-18,-22,36,44);
+          ctx.fillStyle = '#6be8ff'; ctx.fillRect(-13,-15,26,16);
+        }
+        ctx.restore();
+      }
+
+      function drawShard(s) {
+        if (s.got) return;
+        const bob = Math.sin(t*3+s.phase)*5;
+        ctx.save(); ctx.translate(s.x, s.y+bob); ctx.rotate(t*.8+s.phase);
+        ctx.shadowBlur = 16; ctx.shadowColor = '#63e6ff';
+        ctx.fillStyle = '#e8fbff';
+        ctx.beginPath(); ctx.moveTo(0,-14); ctx.lineTo(5,-5); ctx.lineTo(14,0); ctx.lineTo(5,5); ctx.lineTo(0,14); ctx.lineTo(-5,5); ctx.lineTo(-14,0); ctx.lineTo(-5,-5); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#63e6ff'; ctx.fillRect(-3,-8,6,16); ctx.fillRect(-8,-3,16,6); ctx.restore();
+      }
+
+      function drawMeteor(m, i) {
+        ctx.save(); ctx.translate(m.x,m.y); ctx.rotate(t*(i%2?.4:-.3));
+        ctx.fillStyle = '#ff9b64';
+        ctx.fillRect(m.r + 9, -4, 28, 7); ctx.fillRect(m.r + 18, 8, 17, 5); ctx.fillRect(m.r + 3, -14, 20, 4);
+        ctx.fillStyle = m.hit > 0 ? '#dcefff' : '#44395e'; ctx.beginPath();
+        for(let j=0;j<8;j++){ const a=j*Math.PI/4, rr=m.r*(j%2?.86:1); const x=Math.cos(a)*rr,y=Math.sin(a)*rr; j?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+        ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#211c3f'; ctx.fillRect(-m.r*.4,-m.r*.2,m.r*.34,m.r*.3); ctx.fillRect(m.r*.16,m.r*.12,m.r*.3,m.r*.22);
+        ctx.fillStyle = '#756791'; ctx.fillRect(-m.r*.55,-m.r*.53,m.r*.3,4); ctx.restore();
+      }
+
+      function drawBullet(b) {
+        ctx.save(); ctx.shadowBlur = 12; ctx.shadowColor = '#63e6ff'; ctx.fillStyle = '#ecffff';
+        ctx.fillRect(Math.round(b.x - 8), Math.round(b.y - 3), 16, 6);
+        ctx.fillStyle = '#63e6ff'; ctx.fillRect(Math.round(b.x - Math.sign(b.vx) * 15), Math.round(b.y - 2), 8, 4); ctx.restore();
+      }
+
+      function drawPortal() {
+        const s = 210 + Math.sin(portalPulse*4)*8;
+        ctx.save(); ctx.shadowBlur = 34; ctx.shadowColor = '#5eeaff';
+        if (atlas.complete && atlas.naturalWidth) {
+          const aw = atlas.naturalWidth / 2, ah = atlas.naturalHeight / 2;
+          ctx.drawImage(atlas, aw, 0, aw, ah, 805-s/2, 300-s/2, s, s);
+        }
+        else { ctx.strokeStyle='#63e6ff';ctx.lineWidth=18;ctx.beginPath();ctx.arc(805,300,85,0,7);ctx.stroke(); }
+        ctx.restore();
+        ctx.fillStyle = 'rgba(224,246,255,.86)'; ctx.font = '20px FusionPixel, monospace'; ctx.textAlign = 'center'; ctx.fillText('进入虫洞',805,430);
+      }
+
+      function drawCake(lit) {
+        const w = 430, h = 430, x = W/2-w/2, y = 108;
+        if (atlas.complete && atlas.naturalWidth) {
+          const aw = atlas.naturalWidth / 2, ah = atlas.naturalHeight / 2;
+          ctx.drawImage(atlas, lit ? aw : 0, ah, aw, ah, x, y, w, h);
+        }
+        else { ctx.fillStyle='#ffd6b0';ctx.fillRect(300,250,360,230);ctx.fillStyle='#fff2da';ctx.fillRect(300,250,360,35); }
+        if (!lit) {
+          ctx.fillStyle = 'rgba(255,255,255,.9)'; ctx.font = '20px FusionPixel, monospace'; ctx.textAlign='center';
+          ctx.fillText('飞到蜡烛上，点亮生日愿望', W/2, 86);
+        }
+      }
+
+      function draw() {
+        ctx.imageSmoothingEnabled = false;
+        if (state === 'warp') {
+          transition = Math.min(1.5, transition + 1/60);
+          drawBg('space'); drawPortal(); drawAstronaut();
+          const p = transition / 1.5;
+          ctx.save(); ctx.translate(W/2,H/2); ctx.rotate(t*3);
+          for(let i=0;i<28;i++){ const a=i/28*Math.PI*2, r=(1-p)*500+i*4; ctx.fillStyle=i%2?'#61e9ff':'#9c72ff'; ctx.fillRect(Math.cos(a+t)*r-2,Math.sin(a+t)*r-2,4,4); }
+          ctx.restore(); ctx.fillStyle=`rgba(255,255,255,${Math.max(0,p-.65)*2.7})`;ctx.fillRect(0,0,W,H);
+          if (transition >= 1.5) { state='cake'; Object.assign(player,{x:105,y:300,vx:0,vy:0}); status.textContent='最后一步：飞到蜡烛上，点亮它'; }
+          return;
+        }
+        const cakeMode = ['cake','win'].includes(state);
+        drawBg(cakeMode ? 'cake' : 'space');
+        if (cakeMode) drawCake(candleLit);
+        else {
+          shards.forEach(drawShard);
+          meteors.forEach(drawMeteor);
+          bullets.forEach(drawBullet);
+          if (state === 'portal') drawPortal();
+        }
+        bursts.forEach(p => { ctx.globalAlpha = Math.min(1, p.life * 3); ctx.fillStyle = p.color; ctx.fillRect(Math.round(p.x), Math.round(p.y), 5, 5); });
+        ctx.globalAlpha = 1;
+        if (state !== 'start') drawAstronaut();
+        confetti.forEach(c => { ctx.save();ctx.translate(c.x,c.y);ctx.rotate(c.rot);ctx.fillStyle=c.color;ctx.fillRect(-4,-2,8,4);ctx.restore(); });
+      }
+
+      function loop(ts) {
+        const dt = Math.min(.033, (ts-last)/1000 || 0); last = ts;
+        update(dt); draw(); requestAnimationFrame(loop);
+      }
+
+      addEventListener('keydown', e => {
+        if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+        keys[e.key.length===1 ? e.key.toLowerCase() : e.key] = true;
+      }, { passive:false });
+      addEventListener('keyup', e => { keys[e.key.length===1 ? e.key.toLowerCase() : e.key] = false; });
+      document.querySelectorAll('.touch-btn').forEach(btn => {
+        const k = btn.dataset.key;
+        const on = e => { e.preventDefault(); keys[k] = true; ensureAudio(); };
+        const off = e => { e.preventDefault(); keys[k] = false; };
+        btn.addEventListener('pointerdown', on); btn.addEventListener('pointerup', off); btn.addEventListener('pointercancel', off); btn.addEventListener('pointerleave', off);
+      });
+      document.getElementById('startBtn').addEventListener('click', startGame);
+      document.getElementById('retryBtn').addEventListener('click', startGame);
+      document.getElementById('replayBtn').addEventListener('click', resetToStart);
+      document.getElementById('nameInput').addEventListener('keydown', e => { if (e.key === 'Enter') startGame(); });
+      if (document.modelContext?.registerTool) {
+        const lifecycle = new AbortController();
+        try {
+          void Promise.resolve(document.modelContext.registerTool({
+            name: 'start_birthday_mission',
+            title: '开始生日任务',
+            description: '以可选的寿星昵称开始星愿宇航员闯关，并同步更新可见游戏状态。',
+            inputSchema: {
+              type: 'object',
+              properties: { name: { type: 'string', maxLength: 12 } },
+              additionalProperties: false
+            },
+            annotations: { readOnlyHint: false, untrustedContentHint: false },
+            execute(input) {
+              if (input?.name !== undefined && typeof input.name !== 'string') throw new TypeError('name 必须是字符串');
+              document.getElementById('nameInput').value = (input?.name || '').slice(0, 12);
+              startGame();
+              return { state: 'collecting_starlight', target: 6, name: playerName || null };
+            }
+          }, { signal: lifecycle.signal })).catch(() => {});
+        } catch (_) {}
+      }
+      resize(); makeLevel(); requestAnimationFrame(loop);
+    })();
+  </script>
+</body>
+</html>

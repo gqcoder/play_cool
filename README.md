@@ -4,8 +4,9 @@
 
 ## 🎮 在线体验
 
-- **游戏地址**: https://gqcoder.github.io/play_cool/
-- **扫码入口**: 打开项目根目录的 `qrcode.html` 获取二维码
+- **Game 1 地址**: https://gqcoder.github.io/play_cool/
+- **Game 2 地址**: https://gqcoder.github.io/play_cool/game2/
+- **扫码入口**: 打开项目根目录的 `qrcode.html` 获取 Game 1 二维码；打开 `public/game2/qrcode.html` 获取 Game 2 独立二维码
 
 ### PWA 安装（推荐）
 
