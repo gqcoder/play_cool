@@ -159,7 +159,7 @@
     .status-line { color: #dbe4ff; font-size: .84rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .mobile-controls {
       position: absolute;
-      inset: auto 12px 12px 12px;
+      inset: auto 12px 60px 12px;
       display: none;
       justify-content: space-between;
       align-items: end;
@@ -237,7 +237,7 @@
     @media (orientation: landscape) and (max-height: 500px) {
       .topbar, .footerbar { display: none; }
       .shell { grid-template-rows: 1fr; padding: 4px; gap: 4px; }
-      .mobile-controls { inset: auto 8px 8px 8px; }
+      .mobile-controls { inset: auto 8px 40px 8px; }
       .dpad { grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 3px; }
       .touch-btn { width: 40px; height: 40px; font-size: 1rem; }
       .boost { width: 46px; height: 46px; }
@@ -751,8 +751,11 @@
       addEventListener('keyup', e => { keys[e.key.length===1 ? e.key.toLowerCase() : e.key] = false; });
       document.querySelectorAll('.touch-btn').forEach(btn => {
         const k = btn.dataset.key;
-        const on = e => { e.preventDefault(); keys[k] = true; ensureAudio(); };
-        const off = e => { e.preventDefault(); keys[k] = false; };
+        // 映射虚拟按键到实际键盘键
+        const keyMap = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', boost: 'boost', fire: 'fire' };
+        const actualKey = keyMap[k] || k;
+        const on = e => { e.preventDefault(); keys[actualKey] = true; ensureAudio(); };
+        const off = e => { e.preventDefault(); keys[actualKey] = false; };
         btn.addEventListener('pointerdown', on); btn.addEventListener('pointerup', off); btn.addEventListener('pointercancel', off); btn.addEventListener('pointerleave', off);
       });
       document.getElementById('startBtn').addEventListener('click', startGame);
