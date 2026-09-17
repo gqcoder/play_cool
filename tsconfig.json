@@ -18,15 +18,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
-    "noUncheckedIndexedAccess": true,
-
-    /* Path mapping */
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["src/*"],
-      "@game/*": ["src/game/*"],
-      "@assets/*": ["assets/*"]
-    }
+    "noUncheckedIndexedAccess": true
   },
   "include": ["src"]
 }
