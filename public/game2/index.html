@@ -189,6 +189,38 @@
     .celebrate .card { animation: pop .45s steps(5) both; }
     .gift-message { color: #fff; font-size: clamp(1rem, 2.2vw, 1.2rem); line-height: 1.8; margin-bottom: 24px; }
     .small-note { color: #93a7d6; font-size: .75rem; margin: 14px 0 0; }
+    .rotate-hint {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      place-items: center;
+      background: var(--night);
+      padding: 20px;
+      text-align: center;
+    }
+    .rotate-hint-content {
+      max-width: 320px;
+    }
+    .rotate-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      animation: rotateDevice 1.5s ease-in-out infinite;
+    }
+    .rotate-hint h2 {
+      font-size: 1.6rem;
+      color: var(--cyan);
+      margin: 0 0 12px;
+    }
+    .rotate-hint p {
+      color: var(--muted);
+      font-size: .95rem;
+      line-height: 1.6;
+    }
+    @keyframes rotateDevice {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(90deg); }
+    }
     @keyframes twinkle { 50% { opacity: .45; transform: scale(.8); } }
     @keyframes pop { from { transform: scale(.65); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     @media (pointer: coarse), (max-width: 760px) {
@@ -199,6 +231,18 @@
       .hud-chip { padding: 5px 7px; }
       .card { padding: 22px 18px; }
     }
+    @media (orientation: portrait) and (max-width: 760px) {
+      .rotate-hint { display: grid; }
+    }
+    @media (orientation: landscape) and (max-height: 500px) {
+      .topbar, .footerbar { display: none; }
+      .shell { grid-template-rows: 1fr; padding: 4px; gap: 4px; }
+      .mobile-controls { inset: auto 8px 8px 8px; }
+      .dpad { grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 3px; }
+      .touch-btn { width: 40px; height: 40px; font-size: 1rem; }
+      .boost { width: 46px; height: 46px; }
+      .fire { width: 54px; height: 54px; font-size: .7rem; }
+    }
     @media (max-width: 420px) {
       .dpad { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); }
       .touch-btn { width: 42px; height: 42px; }
@@ -207,13 +251,20 @@
       .fire { width: 58px; height: 58px; font-size: .72rem; }
       .hud { gap: 4px; font-size: .72rem; }
     }
-    @media (max-height: 650px) {
+    @media (max-height: 650px) and (orientation: landscape) {
       .topbar, .footerbar { display: none; }
       .shell { grid-template-rows: 1fr; }
     }
   </style>
 </head>
 <body>
+  <div class="rotate-hint" id="rotateHint">
+    <div class="rotate-hint-content">
+      <div class="rotate-icon">📱↻</div>
+      <h2>请横屏观看</h2>
+      <p>为了获得最佳游戏体验，请将设备旋转至横屏模式</p>
+    </div>
+  </div>
   <main class="shell">
     <header class="topbar">
       <div class="brand"><span class="brand-star">✦</span><span>星愿宇航员</span></div>
@@ -350,11 +401,28 @@
         let width = frame.parentElement.clientWidth;
         let height = width / ratio;
         
-        // 移动端适配：优先保证高度显示完整
+        // 移动端横屏适配
         const isMobile = window.innerWidth <= 760 || ('ontouchstart' in window);
-        if (isMobile) {
+        const isLandscape = window.innerWidth > window.innerHeight;
+        
+        if (isMobile && isLandscape) {
+          // 横屏：充分利用屏幕高度，去掉顶部底部栏
           const viewportH = window.innerHeight;
-          const availableH = viewportH - (window.innerHeight > 650 ? 140 : 20);
+          const availableH = viewportH - 8; // 只留极小边距
+          if (height > availableH) {
+            height = availableH;
+            width = height * ratio;
+          }
+          // 确保宽度不超出
+          const viewportW = window.innerWidth - 8;
+          if (width > viewportW) {
+            width = viewportW;
+            height = width / ratio;
+          }
+        } else if (isMobile) {
+          // 竖屏：已通过 CSS 显示横屏提示，但仍需基础适配
+          const viewportH = window.innerHeight;
+          const availableH = viewportH - 140;
           if (height > availableH) {
             height = availableH;
             width = height * ratio;
