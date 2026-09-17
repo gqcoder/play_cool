@@ -232,10 +232,11 @@
           <div class="eyebrow">BIRTHDAY MISSION</div>
           <h1>星愿宇航员</h1>
           <p class="copy">收集散落在宇宙中的 6 枚星光。面对迎面飞来的陨石，你可以灵活躲避，也可以开枪把它们击碎。虫洞的另一边，正等待着一份生日惊喜。</p>
+          <p class="copy" id="loadingHint" style="color: #63e6ff; font-size: .9rem; margin: 16px 0;">正在加载资源...</p>
           <label class="name-row">寿星昵称（可选）
             <input id="nameInput" maxlength="12" placeholder="输入名字，或留空开始" autocomplete="off" />
           </label>
-          <button class="pixel-btn" id="startBtn">开始任务</button>
+          <button class="pixel-btn" id="startBtn" disabled style="opacity: 0.5; cursor: not-allowed;">开始任务</button>
           <p class="small-note">方向键 / WASD 移动 · 空格 / J 发射 · Shift 加速</p>
         </div>
       </div>
@@ -297,6 +298,35 @@
       atlas.src = './assets/cosmic-atlas.png';
       const happySprite = new Image();
       happySprite.src = './assets/happy-astronaut.png';
+      
+      let assetsLoaded = 0;
+      const totalAssets = 2;
+      const loadingHint = document.getElementById('loadingHint');
+      const startBtn = document.getElementById('startBtn');
+      
+      function checkAssetsLoaded() {
+        assetsLoaded++;
+        loadingHint.textContent = `正在加载资源... ${assetsLoaded}/${totalAssets}`;
+        if (assetsLoaded >= totalAssets) {
+          loadingHint.textContent = '资源加载完成！';
+          startBtn.disabled = false;
+          startBtn.style.opacity = '1';
+          startBtn.style.cursor = 'pointer';
+          setTimeout(() => loadingHint.style.display = 'none', 800);
+        }
+      }
+      
+      atlas.onload = checkAssetsLoaded;
+      atlas.onerror = () => {
+        console.error('Failed to load cosmic-atlas.png');
+        checkAssetsLoaded();
+      };
+      happySprite.onload = checkAssetsLoaded;
+      happySprite.onerror = () => {
+        console.error('Failed to load happy-astronaut.png');
+        checkAssetsLoaded();
+      };
+      
       const keys = Object.create(null);
       const W = 960, H = 600;
       let last = 0, state = 'start', collected = 0, energy = 3, invuln = 0;
@@ -319,7 +349,21 @@
         const ratio = W / H;
         let width = frame.parentElement.clientWidth;
         let height = width / ratio;
-        if (height > maxH) { height = maxH; width = height * ratio; }
+        
+        // 移动端适配：优先保证高度显示完整
+        const isMobile = window.innerWidth <= 760 || ('ontouchstart' in window);
+        if (isMobile) {
+          const viewportH = window.innerHeight;
+          const availableH = viewportH - (window.innerHeight > 650 ? 140 : 20);
+          if (height > availableH) {
+            height = availableH;
+            width = height * ratio;
+          }
+        } else if (height > maxH) {
+          height = maxH;
+          width = height * ratio;
+        }
+        
         frame.style.width = width + 'px';
         frame.style.height = height + 'px';
         frame.style.margin = 'auto';
@@ -529,12 +573,12 @@
           const s = 3 + i%4; ctx.fillRect(Math.round(p.x), Math.round(p.y), s, s);
         });
         ctx.globalAlpha = 1;
-        if (happyTimer > 0 && happySprite.complete && happySprite.naturalWidth) {
+        if (happyTimer > 0 && happySprite.complete && happySprite.naturalWidth > 0) {
           const flip = player.facing < 0;
           ctx.translate(player.x, player.y);
           if (flip) ctx.scale(-1, 1);
           ctx.drawImage(happySprite, 245, 205, 770, 850, -51, -56, 102, 112);
-        } else if (atlas.complete && atlas.naturalWidth) {
+        } else if (atlas.complete && atlas.naturalWidth > 0) {
           const aw = atlas.naturalWidth / 2, ah = atlas.naturalHeight / 2;
           const flip = player.vx < -4;
           ctx.translate(player.x, player.y);
@@ -578,7 +622,7 @@
       function drawPortal() {
         const s = 210 + Math.sin(portalPulse*4)*8;
         ctx.save(); ctx.shadowBlur = 34; ctx.shadowColor = '#5eeaff';
-        if (atlas.complete && atlas.naturalWidth) {
+        if (atlas.complete && atlas.naturalWidth > 0) {
           const aw = atlas.naturalWidth / 2, ah = atlas.naturalHeight / 2;
           ctx.drawImage(atlas, aw, 0, aw, ah, 805-s/2, 300-s/2, s, s);
         }
@@ -589,7 +633,7 @@
 
       function drawCake(lit) {
         const w = 430, h = 430, x = W/2-w/2, y = 108;
-        if (atlas.complete && atlas.naturalWidth) {
+        if (atlas.complete && atlas.naturalWidth > 0) {
           const aw = atlas.naturalWidth / 2, ah = atlas.naturalHeight / 2;
           ctx.drawImage(atlas, lit ? aw : 0, ah, aw, ah, x, y, w, h);
         }
