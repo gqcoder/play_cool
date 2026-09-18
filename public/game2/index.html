@@ -52,6 +52,7 @@
       grid-template-rows: auto 1fr auto;
       padding: clamp(10px, 2vw, 22px);
       gap: 12px;
+      position: relative;
     }
     .topbar, .footerbar {
       display: flex;
@@ -166,6 +167,16 @@
       z-index: 3;
       pointer-events: none;
     }
+    .mobile-controls-landscape {
+      position: fixed;
+      inset: 0;
+      display: none;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 20px;
+      z-index: 3;
+      pointer-events: none;
+    }
     .dpad { display: grid; grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(3, 48px); gap: 4px; }
     .touch-btn {
       pointer-events: auto;
@@ -234,10 +245,13 @@
     @media (orientation: portrait) and (max-width: 760px) {
       .rotate-hint { display: grid; }
     }
+    @media (orientation: landscape) and (pointer: coarse) {
+      .mobile-controls { display: none; }
+      .mobile-controls-landscape { display: flex; }
+    }
     @media (orientation: landscape) and (max-height: 500px) {
       .topbar, .footerbar { display: none; }
       .shell { grid-template-rows: 1fr; padding: 4px; gap: 4px; }
-      .mobile-controls { inset: auto 8px 40px 8px; }
       .dpad { grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 3px; }
       .touch-btn { width: 40px; height: 40px; font-size: 1rem; }
       .boost { width: 46px; height: 46px; }
@@ -323,6 +337,19 @@
       </div>
 
       <div class="mobile-controls" aria-label="触控方向键">
+        <div class="dpad">
+          <button class="touch-btn" data-key="up" aria-label="向上">▲</button>
+          <button class="touch-btn" data-key="left" aria-label="向左">◀</button>
+          <button class="touch-btn" data-key="down" aria-label="向下">▼</button>
+          <button class="touch-btn" data-key="right" aria-label="向右">▶</button>
+        </div>
+        <div class="action-pad">
+          <button class="touch-btn boost" data-key="boost" aria-label="加速">✦</button>
+          <button class="touch-btn fire" data-key="fire" aria-label="发射">发射</button>
+        </div>
+      </div>
+
+      <div class="mobile-controls-landscape" aria-label="横屏触控按键">
         <div class="dpad">
           <button class="touch-btn" data-key="up" aria-label="向上">▲</button>
           <button class="touch-btn" data-key="left" aria-label="向左">◀</button>
