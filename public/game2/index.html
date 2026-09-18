@@ -178,6 +178,34 @@
       pointer-events: none;
     }
     .dpad { display: grid; grid-template-columns: repeat(3, 48px); grid-template-rows: repeat(3, 48px); gap: 4px; }
+    .joystick-container {
+      pointer-events: auto;
+      position: relative;
+      width: 120px;
+      height: 120px;
+      touch-action: none;
+    }
+    .joystick-base {
+      position: absolute;
+      inset: 0;
+      border: 3px solid rgba(180, 235, 255, .4);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(24, 21, 65, .85) 0%, rgba(24, 21, 65, .7) 100%);
+      box-shadow: inset 0 0 20px rgba(0, 0, 0, .3), 0 4px 8px rgba(0, 0, 0, .4);
+    }
+    .joystick-stick {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(99, 230, 255, .8);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56, 189, 248, .9) 0%, rgba(34, 211, 238, .7) 100%);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, .5);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      transition: all 0.05s ease-out;
+    }
     .touch-btn {
       pointer-events: auto;
       border: 2px solid rgba(180, 235, 255, .55);
@@ -350,11 +378,9 @@
       </div>
 
       <div class="mobile-controls-landscape" aria-label="横屏触控按键">
-        <div class="dpad">
-          <button class="touch-btn" data-key="up" aria-label="向上">▲</button>
-          <button class="touch-btn" data-key="left" aria-label="向左">◀</button>
-          <button class="touch-btn" data-key="down" aria-label="向下">▼</button>
-          <button class="touch-btn" data-key="right" aria-label="向右">▶</button>
+        <div class="joystick-container" id="joystick" aria-label="虚拟摇杆">
+          <div class="joystick-base"></div>
+          <div class="joystick-stick"></div>
         </div>
         <div class="action-pad">
           <button class="touch-btn boost" data-key="boost" aria-label="加速">✦</button>
@@ -787,9 +813,83 @@
         keys[e.key.length===1 ? e.key.toLowerCase() : e.key] = true;
       }, { passive:false });
       addEventListener('keyup', e => { keys[e.key.length===1 ? e.key.toLowerCase() : e.key] = false; });
+      
+      // 虚拟摇杆控制
+      (() => {
+        const joystick = document.getElementById('joystick');
+        if (!joystick) return;
+        const stick = joystick.querySelector('.joystick-stick');
+        const maxRadius = 35; // 摇杆最大偏移半径
+        let active = false, touchId = null;
+        
+        function updateStick(clientX, clientY) {
+          const rect = joystick.getBoundingClientRect();
+          const centerX = rect.left + rect.width / 2;
+          const centerY = rect.top + rect.height / 2;
+          let dx = clientX - centerX;
+          let dy = clientY - centerY;
+          const distance = Math.hypot(dx, dy);
+          if (distance > maxRadius) {
+            dx = dx / distance * maxRadius;
+            dy = dy / distance * maxRadius;
+          }
+          stick.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+          
+          // 转换为方向键输入，阈值 0.3
+          const threshold = maxRadius * 0.3;
+          keys.ArrowLeft = dx < -threshold;
+          keys.ArrowRight = dx > threshold;
+          keys.ArrowUp = dy < -threshold;
+          keys.ArrowDown = dy > threshold;
+          keys.a = keys.ArrowLeft;
+          keys.d = keys.ArrowRight;
+          keys.w = keys.ArrowUp;
+          keys.s = keys.ArrowDown;
+        }
+        
+        function resetStick() {
+          stick.style.transform = 'translate(-50%, -50%)';
+          keys.ArrowLeft = keys.ArrowRight = keys.ArrowUp = keys.ArrowDown = false;
+          keys.a = keys.d = keys.w = keys.s = false;
+          active = false;
+          touchId = null;
+        }
+        
+        joystick.addEventListener('pointerdown', e => {
+          e.preventDefault();
+          if (!active) {
+            active = true;
+            touchId = e.pointerId;
+            joystick.setPointerCapture(e.pointerId);
+            updateStick(e.clientX, e.clientY);
+            ensureAudio();
+          }
+        });
+        
+        joystick.addEventListener('pointermove', e => {
+          if (active && e.pointerId === touchId) {
+            e.preventDefault();
+            updateStick(e.clientX, e.clientY);
+          }
+        });
+        
+        joystick.addEventListener('pointerup', e => {
+          if (e.pointerId === touchId) {
+            e.preventDefault();
+            resetStick();
+          }
+        });
+        
+        joystick.addEventListener('pointercancel', e => {
+          if (e.pointerId === touchId) {
+            e.preventDefault();
+            resetStick();
+          }
+        });
+      })();
+      
       document.querySelectorAll('.touch-btn').forEach(btn => {
         const k = btn.dataset.key;
-        // 映射虚拟按键到实际键盘键
         const keyMap = { up: 'ArrowUp', down: 'ArrowDown', left: 'ArrowLeft', right: 'ArrowRight', boost: 'boost', fire: 'fire' };
         const actualKey = keyMap[k] || k;
         const on = e => { e.preventDefault(); keys[actualKey] = true; ensureAudio(); };
