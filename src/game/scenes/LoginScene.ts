@@ -50,18 +50,6 @@ export class LoginScene extends Phaser.Scene {
       this.scene.start(SCENES.WORLD_MAP)
     })
 
-    // Game 2 入口
-    const game2Button = this.add.text(width / 2, height / 2 + 145, 'Game 2: 星愿宇航员', {
-      fontSize: '18px',
-      color: '#63e6ff',
-      backgroundColor: '#181541',
-      padding: { x: 18, y: 10 },
-    })
-    game2Button.setOrigin(0.5)
-    game2Button.setInteractive({ useHandCursor: true })
-    game2Button.on('pointerdown', () => {
-      window.location.href = './game2/'
-    })
 
     // 版本信息
     this.add.text(10, height - 30, 'v0.1.0 | 占位素材版本', {

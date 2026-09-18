@@ -9,21 +9,22 @@ export class Player {
   private currentDirection: 'down' | 'up' | 'left' | 'right' = 'down'
 
   constructor(scene: Phaser.Scene, x: number, y: number) {
-    // 使用预生成的精灵表（在 BootScene 中已生成）
-    this.sprite = scene.physics.add.sprite(x, y, 'player_trump', 0)
+    // 巫师角色精灵表 (256x320 每帧)
+    this.sprite = scene.physics.add.sprite(x, y, 'player_wizard', 0)
     this.sprite.setCollideWorldBounds(true)
-    
-    // 调整碰撞体积（脚部区域）
-    this.sprite.setSize(16, 12)
-    this.sprite.setOffset(8, 36)
-    
-    // 播放默认待机动画
+
+    // 碰撞体积按原始纹理设置，随后随角色整体缩放为 20x15
+    // 只碰撞脚部，避免帽子/法杖阻挡地图交互
+    this.sprite.setSize(80, 60)
+    this.sprite.setOffset(88, 250)
+
+    // 播放默认待机动画（正面 idle）
     this.sprite.play('idle_down')
-    
+
     // 添加标签方便识别
     this.sprite.setData('type', 'player')
 
-    // 整体放大显示（碰撞体积在放大前设置，避免被缩放影响判定范围）
+    // 整体显示（精灵本身已是 256px 高，无需额外缩放）
     this.sprite.setScale(PLAYER_CONFIG.DISPLAY_SCALE)
 
     // 初始深度（后续在 update 中按 Y 坐标动态更新，实现与树木/石头的前后遮挡）
@@ -90,12 +91,8 @@ export class Player {
       this.sprite.play(walkAnim)
     }
 
-    // 侧向行走时，根据方向翻转精灵
-    if (this.currentDirection === 'left') {
-      this.sprite.setFlipX(true)
-    } else if (this.currentDirection === 'right') {
-      this.sprite.setFlipX(false)
-    }
+    // 图集已提供左右两个独立方向，使用对应帧，不再翻转角色。
+    this.sprite.setFlipX(false)
   }
 
   /**
@@ -119,9 +116,6 @@ export class Player {
    * 获取动画 key 的方向部分（侧向统一用 'side'）
    */
   private getDirectionKey(): string {
-    if (this.currentDirection === 'left' || this.currentDirection === 'right') {
-      return 'side'
-    }
     return this.currentDirection
   }
 

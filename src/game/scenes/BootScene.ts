@@ -1,6 +1,5 @@
 import Phaser from 'phaser'
 import { SCENES } from '../utils/Constants'
-import { CharacterGenerator } from '../graphics/CharacterGenerator'
 import { TerrainGenerator } from '../graphics/TerrainGenerator'
 
 export class BootScene extends Phaser.Scene {
@@ -9,8 +8,7 @@ export class BootScene extends Phaser.Scene {
   }
 
   preload(): void {
-    // 加载真实像素素材（Puny World 16x16 tileset by Shade, CC0 授权
-    // https://opengameart.org/content/16x16-puny-world-tileset）
+    // 加载 Puny World tileset (CC0)
     const base = 'assets/tilesets/puny'
     const tiles = [
       'grass', 'grass_var1', 'grass_var2',
@@ -22,38 +20,49 @@ export class BootScene extends Phaser.Scene {
     tiles.forEach(name => {
       this.load.image(`puny_${name}`, `${base}/${name}.png`)
     })
+
+    // 加载巫师角色精灵表 (4方向 x 9姿态，每格 256x320)
+    this.load.spritesheet('player_wizard', 'assets/game1/wizard-sprites.png', {
+      frameWidth: 256,
+      frameHeight: 320,
+    })
   }
 
   create(): void {
     // 生成所有地形和环境素材
     TerrainGenerator.generateAll(this)
-    
-    // 生成角色精灵表
-    CharacterGenerator.generateTrumpCharacter(this)
-    
-    // 注册角色动画
-    const directions = ['down', 'up', 'side'] as const
-    
-    directions.forEach((dir, row) => {
-      // 待机动画（第0帧）
+
+    // 注册巫师角色动画
+    // wizard-sprites.png 布局: 4列 x 9行
+    // 列顺序: front(0) left(1) back(2) right(3)
+    // 行顺序: idle(0) happy(1) surprised(2) shy(3) waving(4) walking(5) sitting(6) stars(7) casting(8)
+    const directions = [
+      { key: 'down',  col: 0 },
+      { key: 'left',  col: 1 },
+      { key: 'up',    col: 2 },
+      { key: 'right', col: 3 },
+    ]
+
+    directions.forEach(({ key, col }) => {
+      // Phaser 按行扫描图集：frame = row * 4 + column
+      const idleFrame = col
+
       this.anims.create({
-        key: `idle_${dir}`,
-        frames: [{ key: 'player_trump', frame: row * 4 }],
+        key: `idle_${key}`,
+        frames: [{ key: 'player_wizard', frame: idleFrame }],
         frameRate: 1,
       })
 
-      // 走路动画（4帧循环）
+      // walking 行的四个方向帧按列分布，不能直接使用连续帧。
+      const walkFrame = 5 * 4 + col
       this.anims.create({
-        key: `walk_${dir}`,
-        frames: this.anims.generateFrameNumbers('player_trump', {
-          start: row * 4,
-          end: row * 4 + 3,
-        }),
+        key: `walk_${key}`,
+        frames: [{ key: 'player_wizard', frame: walkFrame }],
         frameRate: 8,
         repeat: -1,
       })
     })
-    
+
     // 资源加载完成后进入登录界面
     this.scene.start(SCENES.LOGIN)
   }

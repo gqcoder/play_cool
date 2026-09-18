@@ -12,9 +12,9 @@ export const PHYSICS_CONFIG = {
 
 export const PLAYER_CONFIG = {
   SPEED: 150,
-  SIZE: 32,
-  COLOR: 0x38bdf8, // 蓝色占位
-  DISPLAY_SCALE: 1.3, // 角色整体显示放大倍数
+  SIZE: 256,            // 巫师角色原始帧宽度
+  COLOR: 0x38bdf8,     // 蓝色占位
+  DISPLAY_SCALE: 0.25, // 256x320 素材按 4x 像素密度显示为约 64x80
 } as const
 
 export const INTERACTIVE_OBJECTS = {
