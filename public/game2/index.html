@@ -278,8 +278,14 @@
       .mobile-controls-landscape { display: flex; }
     }
     @media (orientation: landscape) and (max-height: 500px) {
-      .topbar, .footerbar { display: none; }
-      .shell { grid-template-rows: 1fr; padding: 4px; gap: 4px; }
+      .shell { padding: 4px; gap: 4px; }
+      .topbar, .footerbar { font-size: .72rem; gap: 8px; }
+      .brand { font-size: .75rem; gap: 6px; }
+      .brand-star { font-size: 1rem; }
+      .hud { font-size: .7rem; gap: 6px; }
+      .hud-chip { padding: 4px 6px; border-width: 2px; box-shadow: 2px 2px 0 #050313; }
+      .status-line { font-size: .7rem; }
+      .controls-help { font-size: .68rem; }
       .dpad { grid-template-columns: repeat(3, 40px); grid-template-rows: repeat(3, 40px); gap: 3px; }
       .touch-btn { width: 40px; height: 40px; font-size: 1rem; }
       .boost { width: 46px; height: 46px; }
